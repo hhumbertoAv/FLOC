@@ -69,8 +69,8 @@ To compile and set up FLOC, follow these steps please:
      ```
      ./floc --cpu -p [PID] -i [interval] -t [duration]
      ./floc --sd -p [PID] -i [interval] -t [duration]
-     ./floc --ram -p [PID] -t [interval]
-     ./floc --nic -p [PID] -t [interval]
+     ./floc --ram -p [PID] -t [duration]
+     ./floc --nic -p [PID] -t [duration]
      ```
    - Replace `[PID]`, `[interval]`, and `[duration]` with your desired values.
 
