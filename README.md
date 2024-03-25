@@ -1,4 +1,4 @@
-# <img src="https://github.com/hhumbertoAv/FLOC/assets/6061953/f79f8db7-b374-459b-90a8-fa1a5599e295" width="20"/> FLOC: Energy Measuring System Tool for Linux
+# <img src="https://github.com/hhumbertoAv/FLOC/assets/6061953/f79f8db7-b374-459b-90a8-fa1a5599e295" width="20"/> FLOC: Energy Measuring System Tool for GNU/Linux
 
 ## Acknowledgments
 
