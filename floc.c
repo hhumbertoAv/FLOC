@@ -16,7 +16,6 @@ specific language governing permissions and limitations
 under the License.
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,36 +29,45 @@ int main(int argc, char *argv[]) {
     }
 
     char *app;
-    char *args[8]; // Adjust size based on the maximum number of arguments any app can take, including the app name and NULL terminator.
+    // Adjust the array size based on the maximum number of arguments any app can take.
+    char *args[8]; 
 
-    if (strcmp(argv[1], "--cpu") == 0 || strcmp(argv[1], "--sd") == 0) {
-        // CPU and SD share the same options structure.
-        if (argc != 8) { //  total 8 args
-            printf("Usage for CPU/SD: %s %s -p [PID] -i [interval] -t [duration]\n", argv[0], argv[1]);
+    // CPU, SD, and NIC options now all include an interval (in milliseconds) and a timeout (in seconds).
+    if (strcmp(argv[1], "--cpu") == 0 || strcmp(argv[1], "--sd") == 0 || strcmp(argv[1], "--nic") == 0) {
+        if (argc != 8) { // Expecting 7 arguments plus the program name, total 8
+            printf("Usage for CPU/SD/NIC: %s %s -p [PID] -i [interval in milliseconds] -t [timeout in seconds]\n", argv[0], argv[1]);
             return 1;
         }
 
-        app = (strcmp(argv[1], "--cpu") == 0) ? "ePerfCPU" : "ePerfSD";
+        if (strcmp(argv[1], "--cpu") == 0) {
+            app = "ePerfCPU";
+        } else if (strcmp(argv[1], "--sd") == 0) {
+            app = "ePerfSD";
+        } else { // --nic
+            app = "ePerfNIC";
+        }
+
         args[0] = app;
         args[1] = argv[2]; // "-p"
         args[2] = argv[3]; // PID
         args[3] = argv[4]; // "-i"
-        args[4] = argv[5]; // interval
+        args[4] = argv[5]; // Interval in milliseconds
         args[5] = argv[6]; // "-t"
-        args[6] = argv[7]; // duration
+        args[6] = argv[7]; // Timeout in seconds
         args[7] = NULL; // NULL-terminate the arguments.
-    } else if (strcmp(argv[1], "--ram") == 0 || strcmp(argv[1], "--nic") == 0) {
-        // RAM and NIC share the same options structure but differ from CPU/SD.
+        
+    } else if (strcmp(argv[1], "--ram") == 0) {
+        // RAM -> perf does not accept the "-i"
         if (argc != 6) { // Expecting 4 arguments plus the program name, total 5
-            printf("Usage for RAM/NIC: %s %s -p [PID] -t [interval]\n", argv[0], argv[1]);
+            printf("Usage for RAM: %s %s -p [PID] -t [timeout in seconds]\n", argv[0], argv[1]);
             return 1;
         }
-        app = (strcmp(argv[1], "--ram") == 0) ? "ePerfRAM" : "ePerfNIC";
+        app = "ePerfRAM";
         args[0] = app;
         args[1] = argv[2]; // "-p"
         args[2] = argv[3]; // PID
         args[3] = argv[4]; // "-t"
-        args[4] = argv[5]; // interval
+        args[4] = argv[5]; // Timeout in seconds
         args[5] = NULL; // NULL-terminate the arguments.
     } else {
         printf("Invalid option: %s\n", argv[1]);

@@ -45,20 +45,24 @@ lic
 
 
 pid=0
-timeout=0
+total_time_seconds=0
+interval_milliseconds=0  # Initialize the interval_milliseconds variable
 
 nic_energy=0
 nic_power_AVG=0
 
 getInput()
 {  
-  while getopts "t:p:" opt; do
+  while getopts "t:p:i:" opt; do
     case ${opt} in
       t )
-        timeout=$OPTARG 
+        total_time_seconds=$OPTARG 
         ;;
       p )
         pid=$OPTARG
+        ;;
+      i )  # Handling the new -i option for interval in milliseconds
+        interval_milliseconds=$OPTARG
         ;;
       \? )
         echo "Invalid option: -$OPTARG" >&2
@@ -73,11 +77,10 @@ getInput()
 }
 
 
-
 verifyInput()
 {
 
-  #if [ $timeout -lt 100 ]; then    -> this for the interval 
+  #if [ $total_time_seconds -lt 100 ]; then    -> this for the interval 
   #  echo "I need a bigger windowTime :(..."
   #   exit
   # fi
@@ -88,6 +91,34 @@ verifyInput()
 
 }
 
+
+verifySystemRequirements()
+{
+
+    #########################
+    ######NETHOGS############
+    ######################### 
+
+
+    required_version="0.8.7"
+
+    # Current version of netgohfs -> command: nethogs -V
+    current_version=$(nethogs -V 2>&1 | grep -oP 'version \K(\d+\.\d+\.\d+)')
+    if [ $? -ne 0 ]; then
+        echo "nethogs is not installed or the version could not be determined."
+        exit 1
+    fi
+
+    # Verify the expected 
+    if [ "$(printf '%s\n' "$required_version" "$current_version" | sort -V | head -n1)" != "$required_version" ]; then
+        echo "Your netgohfs version ($current_version) is lower than the required version ($required_version)."
+        exit 1
+    fi
+
+
+}
+
+
 getNICCons()
 {
 
@@ -96,37 +127,43 @@ uplCount=0
 dlCount=0 
 
 
+#nethogs accepts seconds
+interval_seconds=$(echo "$interval_milliseconds / 1000" | bc -l)
+
 while IFS=' ' read -r upload download; do
 
-    uplCount=$(echo "$uplCount + $upload" | bc)
+    uplCount=$(echo "$uplCount + $upload" | bc) 
     dlCount=$(echo "$dlCount + $download" | bc)
     count=$(echo "$count + 1" | bc) 
 
 
-# the last to words of nethogs output are upl and downl rates. STDBUFF is for disable buffering
-done < <(timeout $timeout nethogs wlo1 -t -P $pid -v 0 -d 0.1 | \
+# the last to words of nethogs output are upl and downl rates. STDBUFF is for disable buffering in std: input, output and error
+done < <(timeout $total_time_seconds nethogs wlo1 -t -P $pid -v 0 -d $interval_seconds | \
       stdbuf -i0 -o0 -e0 grep $pid | stdbuf -oL awk '{print $(NF-1),$NF}')
-      #nethogs with steps of 100 msecs
 
 
+#This ensure that the power and energy values are updated (0 above) if the function enters the while at least 1 time
+if [ "$count" -ne 0 ]; then
 
-upload_rate_avg=$(echo "scale=10; $uplCount / $count" | bc)
-download_rate_avg=$(echo "scale=10; $dlCount / $count" | bc)
 
-#from the datasheet (look above)
-max_download_power=0.55 #W
-max_upload_power=1.029 #W
+    upload_rate_avg=$(echo "scale=10; $uplCount / $count" | bc)
+    download_rate_avg=$(echo "scale=10; $dlCount / $count" | bc)
 
-#from the datasheet (look above)
-max_download_rate=150500 #KBps
-max_upload_rate=152500 #KBps
+    #from the datasheet (look above)
+    max_download_power=0.55 #W
+    max_upload_power=1.029 #W
 
-upload_power=$(echo "scale=10; $max_upload_power*($upload_rate_avg / $max_upload_rate)" | bc)
-download_power=$(echo "scale=10; $max_download_power*($download_rate_avg / $max_download_rate)" | bc)
+    #from the datasheet (look above)
+    max_download_rate=150500 #KBps
+    max_upload_rate=152500 #KBps
 
-nic_power_AVG=$(echo "scale=10; $upload_power + $download_power" | bc)
-nic_energy=$(echo "scale=10; $nic_power_AVG*$timeout*0.001" | bc)
+    upload_power=$(echo "scale=10; $max_upload_power*($upload_rate_avg / $max_upload_rate)" | bc)
+    download_power=$(echo "scale=10; $max_download_power*($download_rate_avg / $max_download_rate)" | bc)
 
+    nic_power_AVG=$(echo "scale=10; $upload_power + $download_power" | bc)
+    nic_energy=$(echo "scale=10; $nic_power_AVG*$total_time_seconds*0.001" | bc)
+
+fi
 
 }
 
@@ -139,7 +176,7 @@ verifyPrintOutput()
      [[ $nic_power_AVG =~ ^[0-9]*([.][0-9]+)?$ ]]; then
 
         echo "PID : $pid" 
-        echo "NIC_MEASURE_DURATION (S) : $timeout"
+        echo "NIC_MEASURE_DURATION (S) : $total_time_seconds"
         echo "AVG_NIC_POWER (W) : $nic_power_AVG"
         echo "ENERGY_NIC (J) : $nic_energy" 
   else
@@ -149,6 +186,7 @@ verifyPrintOutput()
 
 main()
 {
+  verifySystemRequirements
   getInput "$@"
   verifyInput
   getNICCons 2> /dev/null

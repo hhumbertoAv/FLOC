@@ -2,7 +2,7 @@
 
 ## System Requirements
 
-Before using `ePerfNIC.sh`, ensure you have `nethogs` installed on your system, version greater than 0.8.7:
+Before using `ePerfNIC.sh`, ensure you have `nethogs` installed on your system, version greater than `0.8.7`:
 
 - **For Arch-based distributions:**
   - Install `nethogs` by running as root:
