@@ -1,0 +1,4 @@
+# The gui python venv
+gui/venv
+gui/__pycache__
+gui/trash
