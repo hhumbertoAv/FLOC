@@ -25,7 +25,7 @@ under the License.
 
 #include "results_map.h"
 #include "pid_energy.h"
-//#include "comm_energy.h"
+#include "comm_energy.h"
 
 int export_to_csv = 0; //Extern variable in results_map.h
 int dynamic_mode = 0; //Extern in comm_energy.h
@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     else if (processName != NULL)
     {
         initialize_results_object(processName, 0);  //defined in results_map.h
-        //comm_energy(processName, (int)interval_ms, (int)total_time_s);
+        comm_energy(processName, (int)interval_ms, (int)total_time_s);
     }
 
     print_results();

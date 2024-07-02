@@ -159,9 +159,9 @@ void print_results()
             printf("*****************************\n");
         }
 
-        printf("Average Power (CPU): %.2f Watts\n", data->average_power);
-        printf("Total CPU Energy (CPU): %.2f Joules\n", data->total_energy);
-        printf("Elapsed Time (CPU): %.2f seconds\n", data->elapsed_time);
+        printf("Average Power (GPU): %.2f Watts\n", data->average_power);
+        printf("Total CPU Energy (GPU): %.2f Joules\n", data->total_energy);
+        printf("Elapsed Time (GPU): %.2f seconds\n", data->elapsed_time);
         //printf("Total Iterations: %d\n", data->count);
     }
     else

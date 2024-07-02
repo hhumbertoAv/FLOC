@@ -4,7 +4,7 @@ LDFLAGS=-lpthread -lrt
 
 TARGET_GPU=ecofloc-gpu.out
 SOURCE_GPU=main.c
-ADDITIONAL_SOURCES=gpu.c pid_energy.c results_map.c
+ADDITIONAL_SOURCES=gpu.c pid_energy.c results_map.c comm_energy.c
 
 all: $(TARGET_GPU)
 

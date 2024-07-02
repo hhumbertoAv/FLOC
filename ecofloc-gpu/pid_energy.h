@@ -20,21 +20,30 @@ under the License.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// #include <math.h> // For floor function
 #include <time.h>   // For nanosleep
+#include <limits.h>
+#include <signal.h>
 #include "gpu.h"
 
 
 
-int gpu_usage(int pid);
 
+extern volatile sig_atomic_t keep_running; // for the CNTRL + C
+
+void handle_sigint(int sig);
+int gpu_usage(int pid);
 /*
- * Description: Calculates estimated power usage of a specific PID on GPU.
+ * Description: It calculates estimated power usage of a specific PID on GPU.
  * Retrieves total GPU power draw and process's GPU utilization percentage.
  * Estimates process's power by multiplying total power by utilization percentage.
  * Power in watts, as watts denote energy per unit time, remains consistent.
  * Even if sampling interval is not one second, watts reflect average energy rate.
+ * GPU utilization is considered as the Streaming Multiprocessor (SM) percentage 
+ * from nvidia-smi pmon
+ * https://developer.download.nvidia.com/compute/DCGM/docs/nvidia-smi-367.38.pdf
  */
 
 
 double pid_energy(int pid, int interval_ms, int timeout_s);
+
+

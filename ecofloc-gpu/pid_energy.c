@@ -69,7 +69,11 @@ int gpu_usage(int pid)
     return usage;
 }
 
-
+volatile sig_atomic_t keep_running = 1; 
+void handle_sigint(int sig) 
+{
+    keep_running = 0;
+}
 double pid_energy(int pid, int interval_ms, int timeout_s)
 {
     double total_energy = 0.0;
@@ -82,7 +86,9 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
 
     unsigned long long start_time = time(NULL);
 
-    while ((time(NULL) - start_time) < timeout_s)
+    signal(SIGINT, handle_sigint);
+
+    while (keep_running && (time(NULL) - start_time) < timeout_s)
     {
         pthread_mutex_lock(&fn_mutex); // Protect time values retrieval 
         float initial_power = gpu_power();
