@@ -57,11 +57,13 @@ int gpu_usage(int pid)
 
     while (fgets(line, sizeof(line), fp) != NULL)
     {
+        int gpu_index;
         int current_pid;
         char sm_usage_str[10];  
         char type[10];          
 
-        if (sscanf(line, "%*s %*d %d %s %s", &current_pid, type, sm_usage_str) == 3)
+        // Adjust the sscanf format string to match the output format
+        if (sscanf(line, "%d %d %s %s", &gpu_index, &current_pid, type, sm_usage_str) == 4)
         {
             if (current_pid == pid && strcmp(type, "G") == 0) // G -> GPU
             {
@@ -76,6 +78,7 @@ int gpu_usage(int pid)
     pclose(fp);
     return usage;
 }
+
 
 double pid_energy(int pid, double interval_ms, double timeout_s)
 {
