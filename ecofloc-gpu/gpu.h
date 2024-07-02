@@ -18,23 +18,7 @@ under the License.
 */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-// #include <math.h> // For floor function
-#include <time.h>   // For nanosleep
-#include "gpu.h"
+#include <stdlib.h>
 
-
-
-int gpu_usage(int pid);
-
-/*
- * Description: Calculates estimated power usage of a specific PID on GPU.
- * Retrieves total GPU power draw and process's GPU utilization percentage.
- * Estimates process's power by multiplying total power by utilization percentage.
- * Power in watts, as watts denote energy per unit time, remains consistent.
- * Even if sampling interval is not one second, watts reflect average energy rate.
- */
-
-
-double pid_energy(int pid, int interval_ms, int timeout_s);
+double gpu_power(); 

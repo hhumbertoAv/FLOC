@@ -1,4 +1,4 @@
- /*
+/*
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -17,24 +17,28 @@ specific language governing permissions and limitations
 under the License.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-// #include <math.h> // For floor function
-#include <time.h>   // For nanosleep
-#include "gpu.h"
+
+#include"gpu.h"
 
 
+double gpu_power() 
+{
+    char buffer[128];
+    float power_draw = 0.0;
+    FILE *fp;
 
-int gpu_usage(int pid);
+    fp = popen("nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits", "r");
+    if (fp == NULL) 
+    {
+        fprintf(stderr, "Failed to run command\n");
+        exit(1);
+    }
 
-/*
- * Description: Calculates estimated power usage of a specific PID on GPU.
- * Retrieves total GPU power draw and process's GPU utilization percentage.
- * Estimates process's power by multiplying total power by utilization percentage.
- * Power in watts, as watts denote energy per unit time, remains consistent.
- * Even if sampling interval is not one second, watts reflect average energy rate.
- */
+    if (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) 
+    {
+        sscanf(buffer, "%f", &power_draw);
+    }
 
-
-double pid_energy(int pid, int interval_ms, int timeout_s);
+    pclose(fp);
+    return power_draw;
+}

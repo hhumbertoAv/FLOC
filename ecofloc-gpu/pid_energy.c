@@ -19,33 +19,16 @@ under the License.
  
 
 #include"pid_energy.h"
+#include "results_map.h"
 
-double gpu_power() 
-{
-    char buffer[128];
-    float power_draw = 0.0;
-    FILE *fp;
+static pthread_mutex_t fn_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-    fp = popen("nvidia-smi --query-gpu=power.draw --format=csv,noheader,nounits", "r");
-    if (fp == NULL) 
-    {
-        fprintf(stderr, "Failed to run command\n");
-        exit(1);
-    }
-
-    if (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
-        sscanf(buffer, "%f", &power_draw);
-    }
-
-    pclose(fp);
-    return power_draw;
-}
 
 int gpu_usage(int pid)
 {
     char command[] = "nvidia-smi pmon -s um -c 1";
     char line[1024];
-    int usage = -1;  
+    int usage = 0;  
     FILE *fp;
 
     fp = popen(command, "r");
@@ -62,8 +45,14 @@ int gpu_usage(int pid)
         char sm_usage_str[10];  
         char type[10];          
 
-        // Adjust the sscanf format string to match the output format
+        /*
+        * # gpu         pid  type    sm    mem    enc    dec    command
+        * # Idx           #   C/G     %      %      %      %    name
+        *    0       2147     G      7      1      -      -    Xorg           
+        */
+
         if (sscanf(line, "%d %d %s %s", &gpu_index, &current_pid, type, sm_usage_str) == 4)
+        
         {
             if (current_pid == pid && strcmp(type, "G") == 0) // G -> GPU
             {
@@ -76,41 +65,49 @@ int gpu_usage(int pid)
         }
     }
     pclose(fp);
+
     return usage;
 }
 
 
-double pid_energy(int pid, double interval_ms, double timeout_s)
+double pid_energy(int pid, int interval_ms, int timeout_s)
 {
     double total_energy = 0.0;
-    double elapsed_time = 0.0;
     double interval_s = interval_ms / 1000.0; // Convert ms to seconds
 
     // Setup nanosleep interval
     struct timespec interval_time;
-    interval_time.tv_sec = (time_t)interval_s;
-    interval_time.tv_nsec = (long)((interval_s - interval_time.tv_sec) * 1e9); // Remaining part in nanoseconds
+    interval_time.tv_sec = interval_ms / 1000;
+    interval_time.tv_nsec = (interval_ms % 1000) * 1000000;
 
-    while (elapsed_time < timeout_s)
+    unsigned long long start_time = time(NULL);
+
+    while ((time(NULL) - start_time) < timeout_s)
     {
+        pthread_mutex_lock(&fn_mutex); // Protect time values retrieval 
         float initial_power = gpu_power();
         int initial_usage = gpu_usage(pid);
         float initial_process_power = (initial_usage / 100.0) * initial_power;
+        pthread_mutex_unlock(&fn_mutex);
 
         nanosleep(&interval_time, NULL); // Sleep for interval_time
 
+        pthread_mutex_lock(&fn_mutex); // Protect time values retrieval 
         float final_power = gpu_power();
         int final_usage = gpu_usage(pid);
         float final_process_power = (final_usage / 100.0) * final_power;
+        pthread_mutex_unlock(&fn_mutex);
 
-        // Calculate average power over the interval
-        float average_power = (initial_process_power + final_process_power) / 2.0;
+        //  average power over the interval
+        float avg_interval_power = (initial_process_power + final_process_power) / 2.0;
 
-        // Energy = Power * Time (in seconds)
-        double energy = average_power * interval_s;
-        total_energy += energy;
+        // energy = power * time (in seconds)
+        double interval_energy = avg_interval_power * interval_s;
 
-        elapsed_time += interval_s;
+        // Write results
+        write_results(pid, time(NULL) - start_time, avg_interval_power, interval_energy);
+
+        total_energy += interval_energy;
     }
 
     return total_energy; // Total energy in Joules

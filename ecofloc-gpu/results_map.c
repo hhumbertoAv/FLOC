@@ -57,7 +57,7 @@ int create_results_object(const char* name, int* fd, void** ptr)
 
     if(export_to_csv==1)
     {
-        FILE *configFile = fopen("cpu_settings.conf", "r");
+        FILE *configFile = fopen("gpu_settings.conf", "r");
         if (configFile) 
         {
             char filePath[1024];
@@ -67,10 +67,9 @@ int create_results_object(const char* name, int* fd, void** ptr)
                 filePath[strcspn(filePath, "\n")] = 0;
                 // Open the export file using the path from settings.conf
                 export_file = fopen(filePath, "a");
+
                 if (!export_file) 
-                {
                     perror("Failed to open export file specified in settings.conf");
-                }
             } 
             else 
             {
@@ -149,13 +148,13 @@ void print_results()
     {
         if (data->is_pid)
         {
-            printf("******ECO-FLOC -> CPU********\n");
+            printf("******ECO-FLOC -> GPU********\n");
             printf("PID: %d\n", data->identifier.pid);
             printf("*****************************\n");
         }
         else
         {
-            printf("******ECO-FLOC -> CPU********\n");
+            printf("******ECO-FLOC -> GPU********\n");
             printf("Comm Name: %s\n", data->identifier.comm_name);
             printf("*****************************\n");
         }

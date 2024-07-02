@@ -3,7 +3,7 @@ FLOC_DIR=/opt/ecofloc/
 GUI_DIR=/opt/ecofloc/gui/
 REQUIREMENTS=python_libs.conf
 
-all: clean uninstall cpu sd ram nic floc install
+all: clean uninstall cpu gpu sd ram nic floc install
 
 create_ecofloc_folder: 
 	mkdir -p $(FLOC_DIR)
@@ -26,6 +26,24 @@ clean_cpu:
 uninstall_cpu:
 	rm -f /usr/local/bin/ecofloc-cpu
 	rm -f /usr/local/bin/cpu_settings.conf
+
+######## GPU ##########
+
+gpu:
+	$(MAKE) -C ecofloc-gpu
+
+install_gpu: 
+	cp ecofloc-gpu/ecofloc-gpu.out $(FLOC_DIR)
+	cp ecofloc-gpu/gpu_settings.conf $(FLOC_DIR)
+	ln -sf /opt/ecofloc/ecofloc-gpu.out /usr/local/bin/ecofloc-gpu
+	ln -sf /opt/ecofloc/gpu_settings.conf /usr/local/bin/gpu_settings.conf
+
+clean_gpu:
+	$(MAKE) -C ecofloc-gpu clean
+
+uninstall_gpu:
+	rm -f /usr/local/bin/ecofloc-gpu
+	rm -f /usr/local/bin/gpu_settings.conf
 
 ######## SD ##########
 
@@ -109,19 +127,20 @@ copy_files:
 
 clean:
 	$(MAKE) -C ecofloc-cpu clean
+	$(MAKE) -C ecofloc-gpu clean
 	$(MAKE) -C ecofloc-ram clean
 	$(MAKE) -C ecofloc-sd clean
 	$(MAKE) -C ecofloc-nic clean
-	rm -f ecofloc-cpu.out ecofloc-sd.out sdFeatures.conf cpu_settings.conf ecofloc-ram.out ecofloc-nic.out ecofloc
+	rm -f ecofloc-cpu.out ecofloc-sd.out sdFeatures.conf cpu_settings.conf ecofloc-gpu.out gpu_settings.conf ecofloc-ram.out ecofloc-nic.out ecofloc
 
 
-install: create_ecofloc_folder install_cpu install_sd install_ram install_nic
+install: create_ecofloc_folder install_cpu install_gpu install_sd install_ram install_nic
 	cp ecofloc /opt/ecofloc/
-	chmod +x /opt/ecofloc/ecofloc-cpu.out /opt/ecofloc/ecofloc-sd.out /opt/ecofloc/ecofloc-ram.out /opt/ecofloc/ecofloc-nic.out /opt/ecofloc/ecofloc
+	chmod +x /opt/ecofloc/ecofloc-cpu.out /opt/ecofloc/ecofloc-gpu.out /opt/ecofloc/ecofloc-sd.out /opt/ecofloc/ecofloc-ram.out /opt/ecofloc/ecofloc-nic.out /opt/ecofloc/ecofloc
 	ln -sf /opt/ecofloc/ecofloc /usr/local/bin/ecofloc
 
 
 uninstall:
 	rm -rf /opt/ecofloc
-	rm -f /usr/local/bin/ecofloc-cpu /usr/local/bin/ecofloc-sd /usr/local/bin/ecofloc-ram /usr/local/bin/ecofloc-nic /usr/local/bin/floc /usr/local/bin/flocUI
-	rm -f /usr/local/bin/sdFeatures.conf /usr/local/bin/cpu_settings.conf
+	rm -f /usr/local/bin/ecofloc-cpu /usr/local/bin/ecofloc-gpu /usr/local/bin/ecofloc-sd /usr/local/bin/ecofloc-ram /usr/local/bin/ecofloc-nic /usr/local/bin/floc /usr/local/bin/flocUI
+	rm -f /usr/local/bin/sdFeatures.conf /usr/local/bin/cpu_settings.conf /usr/local/bin/gpu_settings.conf

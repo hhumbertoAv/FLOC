@@ -213,6 +213,8 @@ double pid_energy(int pid, int interval_ms, int timeout_s)
         write_results(pid, time(NULL) - start_time, avg_interval_power,interval_energy);
         //print_results();
 
+        total_energy += interval_energy; //TODO-> cummulation in map
+
         start_pid_time = end_pid_time;
         start_total_time = end_total_time;
 
