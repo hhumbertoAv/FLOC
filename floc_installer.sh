@@ -463,7 +463,7 @@ main() {
     result_sd=$?
     if [ "$result_sd" -eq 0 ]; then 
         ((number_hw_success++))
-        make create_floc_folder > /dev/null 
+        make create_ecofloc_folder > /dev/null 
         make uninstall_sd > /dev/null
         make clean_sd > /dev/null
 
